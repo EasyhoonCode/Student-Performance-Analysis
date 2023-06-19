@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import json
 import numpy as np
 from matplotlib.font_manager import FontProperties
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 class Distribution_statistics(QWidget):
     def __init__(self):
@@ -19,18 +21,29 @@ class Distribution_statistics(QWidget):
         self.layout_QV_group = QGroupBox()
         self.layout_QV = QVBoxLayout()
         self.tip_lab = QLabel()
+        self.scikit_tip_lab = QLabel()
         self.button_plot = QPushButton()
-
+        self.scikit_plot = QPushButton()
+        self.scikit_plot.setText("机器学习")
+        self.scikit_plot.setStyleSheet("background-color: white")
         self.tip_lab.setText("分布值计算")
         self.tip_lab.setStyleSheet("font-size:25px;color:white")
+        self.scikit_plot.setFixedSize(150, 40)
+        self.scikit_tip_lab.setText("绘制图表")
+        self.scikit_tip_lab.setStyleSheet("font-size:25px;color:white")
 
         self.button_plot.clicked.connect(self.plot_graphs)
+        self.scikit_plot.clicked.connect(self.scikit_plot_graphs)
+
 
         self.layout_QV.addWidget(self.button_plot)
         self.layout_QV.addWidget(self.tip_lab)
+        self.layout_QV.addWidget(self.scikit_plot)
+        self.layout_QV.addWidget(self.scikit_tip_lab)
         self.layout_QV_group.setLayout(self.layout_QV)
         self.layout_QV.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.tip_lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.scikit_tip_lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.button_plot.setFixedSize(150, 40)
         self.button_plot.setText("弱水三千，吾独取一瓢。")
         self.button_plot.setStyleSheet("background-color: white")
@@ -43,7 +56,8 @@ class Distribution_statistics(QWidget):
         shadow.setOffset(3, 3)
         shadow.setColor(Qt.gray)
         self.button_plot.setGraphicsEffect(shadow)
-
+        self.scikit_plot.setGraphicsEffect(shadow)
+        
 
     def plot_graphs(self):
         # 启用GUI模式
@@ -109,3 +123,33 @@ class Distribution_statistics(QWidget):
         msg_box.setText(message)
         msg_box.exec_()     # 显示消息框
         plt.show(block=False)
+
+    def scikit_plot_graphs(self):
+        # 读取json文件
+        with open('output\students.json',"r", encoding='utf-8') as f:
+            data = json.load(f)
+
+        # 将学生成绩数据存储为numpy数组
+        scores = []
+        for student in data['students']:
+            scores.append([student['course_a'], student['course_b'], student['course_c']])
+        data = np.array(scores)
+
+        # 定义每列数据的权重
+        column_weights = np.array([1, 1, 2])
+
+        # 将每列数据乘以对应的权重
+        weighted_data = data * column_weights
+
+        # 对加权后的数据运行PCA
+        pca = PCA(n_components=1)
+        transformed_data = pca.fit_transform(weighted_data)
+
+        # 使用KMeans算法对一维数据进行聚类
+        kmeans = KMeans(n_clusters=3, n_init=10)
+        kmeans.fit(transformed_data)
+
+        # 可视化聚类结果
+        plt.scatter(transformed_data[:,0], np.zeros_like(transformed_data[:,0]), c=kmeans.labels_)
+        plt.xlabel('Scores')
+        plt.show() 
