@@ -7,11 +7,21 @@ from PySide6.QtGui import *
 import json
 import csv
 import sqlite3
+import requests
 
 class Tablewid(QWidget):
-    def __init__(self):
+    def __init__(self,classname=None):
         super().__init__()
-
+        if classname is None:
+            api_url = "http://localhost:8000/students/"
+        else:
+            api_url = f"http://localhost:8000/students/{classname}"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)','Content-Type': 'application/json'}
+        response = requests.get(api_url,headers)
+        students = response.json()
+        # 请求获取所有班级名
+        classname_response = requests.get('http://localhost:8000/classnames')
+        self.students = students # 将获取到的学生数据存储为类的属性
         
         self.tablewid_group = QGroupBox() #小工具的容器
         self.tablewid_layout2 = QVBoxLayout() #小工具的垂直布局
@@ -72,19 +82,17 @@ class Tablewid(QWidget):
         search_action = QAction(search_icon,"",self.search_box)
         self.search_box.addAction(search_action,QLineEdit.TrailingPosition)
 
-
-
-        with open("output\students.json","r", encoding='utf-8') as f:
-            data = json.load(f)
-
-            # 获取所有班级
-            classes = set([item["classname"] for item in data["students"]])
-            
+        if classname_response.status_code == 200:
+            # 解析响应获取班级名列表
+            classnames = classname_response.json()['classnames']
             # 将班级添加到下拉列表中
             self.combo_box.addItem("全部班级")
             self.combo_box.setStyleSheet("color:black;background-color:white;")
-            for c in sorted(classes):
-                self.combo_box.addItem(c)
+            for classname in sorted(classnames):
+                self.combo_box.addItem(classname)
+        else:
+            print('请求失败')
+
                 
         # self.tablewid_group = QVBoxLayout()
         self.table_1 =QTableWidget()
@@ -124,74 +132,24 @@ class Tablewid(QWidget):
         self.data_btn.clicked.connect(self.on_export_button_click)
 
     def fill_table(self, classname=None):
-        if self.table_1.rowCount()>0:
+            if classname is not None:
+                filtered_students = [s for s in self.students if s['classname'] == classname]
+            else:
+                filtered_students = self.students
+
+            if self.table_1.rowCount() > 0:
                 self.table_1.clearContents()
                 self.table_1.setRowCount(0)
 
-        self.items = 0 # 初始化为0
-        conn = sqlite3.connect("D:\project\project\output\students.db")
-        cursor = conn.cursor()
-        if classname is None:
-            cursor.execute("SELECT DISTINCT classname FROM students")
-            classnames = [row[0] for row in cursor.fetchall()]
-
-            for classname in sorted(classnames):
-                cursor.execute("SELECT * FROM students WHERE classname=?", (classname,))
-                rows = cursor.fetchall()
-
-                for row in rows:
-                    stu_id = row[0]
-                    name = row[1]
-                    age = row[2]
-                    course_a = row[4]
-                    course_b = row[5]
-                    course_c = row[6]
-
-                    classname_item = QTableWidgetItem(classname)
-                    classname_item.setTextAlignment(Qt.AlignCenter)
-
-                    stu_id_item = QTableWidgetItem(f"{stu_id:.0f}")
-                    stu_id_item.setTextAlignment(Qt.AlignCenter)
-
-                    name_item = QTableWidgetItem(name)
-                    name_item.setTextAlignment(Qt.AlignCenter)
-
-                    age_item = QTableWidgetItem(f"{age:.0f}")
-                    age_item.setTextAlignment(Qt.AlignCenter)
-
-                    course_a_item = QTableWidgetItem(f"{course_a:.0f}")
-                    course_a_item.setTextAlignment(Qt.AlignCenter)
-
-                    course_b_item = QTableWidgetItem(f"{course_b:.0f}")
-                    course_b_item.setTextAlignment(Qt.AlignCenter)
-
-                    course_c_item = QTableWidgetItem(f"{course_c:.0f}")
-                    course_c_item.setTextAlignment(Qt.AlignCenter)
-
-
-                    row_position = self.table_1.rowCount()
-                    self.table_1.insertRow(row_position)
-                    self.table_1.setItem(self.items, 0, classname_item)
-                    self.table_1.setItem(self.items, 1, stu_id_item)
-                    self.table_1.setItem(self.items, 2, name_item)
-                    self.table_1.setItem(self.items, 3, age_item)
-                    self.table_1.setItem(self.items, 4, course_a_item)
-                    self.table_1.setItem(self.items, 5, course_b_item)
-                    self.table_1.setItem(self.items, 6, course_c_item)
-
-                    self.items += 1
-                    self.table_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        else:
-            cursor.execute("SELECT * FROM students WHERE classname=?", (classname,))
-            rows = cursor.fetchall()
-
-            for row in rows:
-                stu_id = row[0]
-                name = row[1]
-                age = row[2]
-                course_a = row[4]
-                course_b = row[5]
-                course_c = row[6]
+            self.items = 0 # 初始化为0
+            for i, student in enumerate(filtered_students):
+                classname = student["classname"]
+                stu_id = student["id"]
+                name = student["name"]
+                age = student["age"]
+                course_a = student["course_a"]
+                course_b = student["course_b"]
+                course_c = student["course_c"]
 
                 classname_item = QTableWidgetItem(classname)
                 classname_item.setTextAlignment(Qt.AlignCenter)
@@ -226,99 +184,53 @@ class Tablewid(QWidget):
                 self.table_1.setItem(self.items, 6, course_c_item)
 
                 self.items += 1
-                self.table_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        conn.close()
+            self.table_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def fill_table_2(self, classname=None):
+        if classname is not None:
+                filtered_students = [s for s in self.students if s['classname'] == classname]
+        else:
+                filtered_students = self.students
         if self.table_2.rowCount() > 0:
             self.table_2.clearContents()
             self.table_2.setRowCount(0)
 
         self.items = 0 # 初始化为0
-        conn = sqlite3.connect("D:\project\project\output\students.db")
-        cursor = conn.cursor()
 
-        if classname is None:
-            cursor.execute("SELECT DISTINCT classname FROM students")
-            classnames = [row[0] for row in cursor.fetchall()]
+        for i, student in enumerate(filtered_students):
+            classname = student["classname"]
+            name = student["name"]
+            average_score = student["average_score"]
+            max_score = student["max_score"]
+            min_score = student["min_score"]
 
-            for classname in sorted(classnames):
-                if self.table_2.findItems(classname, Qt.MatchExactly):
-                    continue
+            classname_item = QTableWidgetItem(classname)
+            classname_item.setTextAlignment(Qt.AlignCenter)
 
-                cursor.execute("SELECT * FROM students WHERE classname=?", (classname,))
-                rows = cursor.fetchall()
-                for row in rows:
-                    name = row[1]
-                    average_score = row[7]
-                    max_score = row[8]
-                    min_score = row[9]
+            name_item = QTableWidgetItem(name)
+            name_item.setTextAlignment(Qt.AlignCenter)
 
-                    classname_item = QTableWidgetItem(classname)
-                    classname_item.setTextAlignment(Qt.AlignCenter)
+            average_score_item = QTableWidgetItem(f"{average_score:.2f}")
+            average_score_item.setTextAlignment(Qt.AlignCenter)
 
-                    name_item = QTableWidgetItem(name)
-                    name_item.setTextAlignment(Qt.AlignCenter)
+            max_score_item = QTableWidgetItem(f"{max_score:.0f}")
+            max_score_item.setTextAlignment(Qt.AlignCenter)
 
-                    average_score_item = QTableWidgetItem(f"{average_score:.2f}")
-                    average_score_item.setTextAlignment(Qt.AlignCenter)
-
-                    max_score_item = QTableWidgetItem(f"{max_score:.0f}")
-                    max_score_item.setTextAlignment(Qt.AlignCenter)
-
-                    min_score_item = QTableWidgetItem(f"{min_score:.0f}")
-                    min_score_item.setTextAlignment(Qt.AlignCenter)
+            min_score_item = QTableWidgetItem(f"{min_score:.0f}")
+            min_score_item.setTextAlignment(Qt.AlignCenter)
 
 
-                    row_position = self.table_2.rowCount()
-                    self.table_2.insertRow(row_position)
-                    self.table_2.setItem(self.items, 0, classname_item)
-                    self.table_2.setItem(self.items, 1, name_item)
-                    self.table_2.setItem(self.items, 2, average_score_item)
-                    self.table_2.setItem(self.items, 3, max_score_item)
-                    self.table_2.setItem(self.items, 4, min_score_item)
+            row_position = self.table_2.rowCount()
+            self.table_2.insertRow(row_position)
+            self.table_2.setItem(self.items, 0, classname_item)
+            self.table_2.setItem(self.items, 1, name_item)
+            self.table_2.setItem(self.items, 2, average_score_item)
+            self.table_2.setItem(self.items, 3, max_score_item)
+            self.table_2.setItem(self.items, 4, min_score_item)
 
-                    self.items += 1
-                    self.table_2.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        else:
-            if not self.table_2.findItems(classname, Qt.MatchExactly):
-                cursor.execute("SELECT * FROM students WHERE classname=?", (classname,))
-                rows = cursor.fetchall()
-                for row in rows:
-                    name = row[1]
-                    average_score = row[7]
-                    max_score = row[8]
-                    min_score = row[9]
-
-                    classname_item = QTableWidgetItem(classname)
-                    classname_item.setTextAlignment(Qt.AlignCenter)
-
-                    name_item = QTableWidgetItem(name)
-                    name_item.setTextAlignment(Qt.AlignCenter)
-
-                    average_score_item = QTableWidgetItem(f"{average_score:.2f}")
-                    average_score_item.setTextAlignment(Qt.AlignCenter)
-
-                    max_score_item = QTableWidgetItem(f"{max_score:.0f}")
-                    max_score_item.setTextAlignment(Qt.AlignCenter)
-
-                    min_score_item = QTableWidgetItem(f"{min_score:.0f}")
-                    min_score_item.setTextAlignment(Qt.AlignCenter)
-
-
-                    row_position = self.table_2.rowCount()
-                    self.table_2.insertRow(row_position)
-                    self.table_2.setItem(self.items, 0, classname_item)
-                    self.table_2.setItem(self.items, 1, name_item)
-                    self.table_2.setItem(self.items, 2, average_score_item)
-                    self.table_2.setItem(self.items, 3, max_score_item)
-                    self.table_2.setItem(self.items, 4, min_score_item)
-
-                    self.items += 1
-                    self.table_2.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        conn.close()
+            self.items += 1
+            self.table_2.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def on_export_button_click(self):
         table_data = []
@@ -374,15 +286,9 @@ class Tablewid(QWidget):
         if current_class == "全部班级":
             self.fill_table(None)
             self.fill_table_2(None)
-        elif current_class == "2005班":
-            self.fill_table("2005班")
-            self.fill_table_2("2005班")
-        elif current_class == "2008班":
-            self.fill_table("2008班")
-            self.fill_table_2("2008班")
-        elif current_class == "2007班":
-            self.fill_table("2007班")
-            self.fill_table_2("2007班")
+        else:
+            self.fill_table(current_class)
+            self.fill_table_2(current_class)
 
     def on_filter_text_changed(self,filter_text):
         # 遍历 table_1 中的每一行

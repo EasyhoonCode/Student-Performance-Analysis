@@ -30,7 +30,7 @@ class grade_barchart(QWidget):
         cur.execute('SELECT classname, MAX(course_a), MIN(course_a), MAX(course_b), MIN(course_b), MAX(course_c), MIN(course_c) FROM students GROUP BY classname')
         data = cur.fetchall()
         # 创建一个包含三个班级的字典
-        class_scores = {'2005班': [], '2007班': [], '2008班': []}
+        class_scores = {'2005班': [], '2007班': [], '2008班': [],'2009班': []}
         # 遍历数据，并将每个班级的最高分和最低分添加到对应的列表中
         for row in data:
             class_name = row[0]

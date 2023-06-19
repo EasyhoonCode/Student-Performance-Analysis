@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # TAG:创建参数解析器并设置默认参数
 
     parser = argparse.ArgumentParser(description='Generate data for student.')
-    parser.add_argument('--num_students', type=int, default=50, help='Number of students to generate')
+    parser.add_argument('--num_students', type=int, default=100, help='Number of students to generate')
     parser.add_argument('--config_path', type=str, default='cfg\config.ini', help='Path to configuration file')
     parser.add_argument('--course_a', type=str, default='normal', help='Distribution type for course A')
     parser.add_argument('--course_b', type=str, default='normal', help='Distribution type for course B')

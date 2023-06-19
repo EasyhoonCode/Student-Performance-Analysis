@@ -21,9 +21,9 @@ class Linechart(QWidget):
         course_a_series = []
         course_b_series = []
         course_c_series = []
-        course_a_series = QLineSeries()  # 平均分线
-        course_b_series = QLineSeries()  # 最高分线
-        course_c_series = QLineSeries()  # 最低分线
+        course_a_series = QLineSeries()  
+        course_b_series = QLineSeries()  
+        course_c_series = QLineSeries()  
         course_a_series.setName("课程A")
         course_b_series.setName("课程B")
         course_c_series.setName("课程C")
