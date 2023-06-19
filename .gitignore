@@ -1,0 +1,6 @@
+#lgnore virtual environment
+venv/
+.venv/
+env/
+.env/
+*.pyc

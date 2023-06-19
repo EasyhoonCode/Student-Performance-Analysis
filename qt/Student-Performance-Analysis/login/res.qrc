@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="res">
+    <file>res/img/background1.png</file>
+    <file>res/icon/close-fill.png</file>
+  </qresource>
+</RCC>

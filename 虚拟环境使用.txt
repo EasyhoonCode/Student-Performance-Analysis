@@ -1,0 +1,13 @@
+如果使用的终端是Windows PowerShell，运行activate.ps1文件来进入虚拟环境：.venv\Scripts\activate.ps1
+如果是第一次在Windows PowerShell 终端中运行.ps1文件，那么终端大概率会报错：“在此系统上禁止运行脚本”。
+这是由于这是由于 PowerShell 的执行策略默认为“禁止执行脚本”所致。解决的办法是：以管理员身份运行 Windows PowerShell，在运行activate.ps1文件前，
+先执行以下指令来将执行策略设置为“RemoteSigned”，就可以运行本机上的脚本了：
+set-executionpolicy RemoteSigned
+现在重新执行指令运行activate.ps1文件，就可以顺利在Windows PowerShell中顺利进入虚拟环境了。
+如果使用的终端是cmd命令提示符，我们在cmd中运行activate.bat文件即可进入虚拟环境，
+运行文件的方法是在cmd中输入文件的完整路径之后按回车即可：
+.venv\Scripts\activate.bat
+如果想要退出虚拟环境，两个终端都是直接运行deactivate文件即可：
+deactivate
+虚拟环境中安装第三方包
+python -m pip install xxx
