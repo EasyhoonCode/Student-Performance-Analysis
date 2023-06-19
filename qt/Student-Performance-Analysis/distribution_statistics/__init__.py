@@ -17,7 +17,7 @@ from sklearn.decomposition import PCA
 class Distribution_statistics(QWidget):
     def __init__(self):
         super().__init__()
-        ##TODOX 后续需要修改机器学习的代码
+        ##TODO 后续需要修改机器学习的代码
         self.layout_QV_group = QGroupBox()
         self.layout_QV = QVBoxLayout()
         self.tip_lab = QLabel()
