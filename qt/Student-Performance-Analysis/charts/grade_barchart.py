@@ -50,6 +50,7 @@ class grade_barchart(QWidget):
 
         # 创建一个 QBarSeries 对象来表示三个班级的成绩数据
         series = QBarSeries()
+        series.setBarWidth(1)
         # 遍历每个班级的成绩，并将最高分和最低分添加到对应的 QBarSet 对象中
         for class_name, scores in class_scores.items():
             bar_set = QBarSet(class_name)
