@@ -8,8 +8,6 @@ from PySide6.QtGui import *
 from PySide6.QtCharts import *
 import json
 
-
-
 class Piechart(QWidget):
     def __init__(self):
         super().__init__()
@@ -46,6 +44,7 @@ class Piechart(QWidget):
         self.chart.legend().setAlignment(Qt.AlignBottom)
         self.chart_view = QChartView()
         self.chart_view.setChart(self.chart)
+        self.chart_view.setRenderHint(QPainter.Antialiasing)
 
         self.layout_QH.addWidget(self.chart_view)
         self.layout_group.setLayout(self.layout_QH)

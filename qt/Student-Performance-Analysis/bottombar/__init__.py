@@ -20,20 +20,19 @@ class Bottombar(QWidget):
 
         #导航栏标签
         #self.bottombardesc = bottombardesc("By Easyhoon(ZhongKaiwei) 小组成员:钟凯威、吴榕辉、曾铨葳、刘伟晗、蓝鼎、陈泳君、林浩明、黄志鑫")
-        self.bottombardesc = bottombardesc("By Easyhoon(ZhongKaiwei)")
+        self.bottombardesc = bottombardesc("<a href='https://github.com/EasyhoonCode' style='text-decoration:none; color:white'>By Easyhoon(ZhongKaiwei) 小组成员:钟凯威、吴榕辉、曾铨葳、刘伟晗、蓝鼎、陈泳君、林浩明、黄志鑫</a>")
         self.bottombar_layout.addWidget(self.bottombardesc)
         self.bottombar_layout.addStretch()
 
         #导航栏右侧用户设置
         self.bottombarversion = bottombardesc("Version 1.0.0")
         self.bottombar_layout.addWidget(self.bottombarversion)
-        
-        
         self.bottombar_group.setLayout(self.bottombar_layout)
 
 
 class bottombardesc(QLabel):
     def __init__(self,arg):
         super().__init__()
-        self.setText(arg)
+        self.setText(arg,)
         self.setStyleSheet("color:rgb(255,255,255);")
+        self.setOpenExternalLinks(True)
